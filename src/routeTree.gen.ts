@@ -14,7 +14,12 @@ import { Route as MediaRouteRouteImport } from './routes/media/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MediaIndexRouteImport } from './routes/media/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as UploadsSplatRouteImport } from './routes/uploads/$'
 import { Route as MediaIdRouteImport } from './routes/media/$id'
+import { Route as AdminUploadRouteImport } from './routes/admin/upload'
+import { Route as AdminMediaRouteImport } from './routes/admin/media'
+import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const LoginRoute = LoginRouteImport.update({
@@ -42,10 +47,35 @@ const MediaIndexRoute = MediaIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MediaRouteRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const UploadsSplatRoute = UploadsSplatRouteImport.update({
+  id: '/uploads/$',
+  path: '/uploads/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MediaIdRoute = MediaIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => MediaRouteRoute,
+} as any)
+const AdminUploadRoute = AdminUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminMediaRoute = AdminMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -55,28 +85,42 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/media': typeof MediaRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/media/$id': typeof MediaIdRoute
+  '/uploads/$': typeof UploadsSplatRoute
+  '/admin/': typeof AdminIndexRoute
   '/media/': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
   '/login': typeof LoginRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/media/$id': typeof MediaIdRoute
+  '/uploads/$': typeof UploadsSplatRoute
+  '/admin': typeof AdminIndexRoute
   '/media': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/media': typeof MediaRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/media/$id': typeof MediaIdRoute
+  '/uploads/$': typeof UploadsSplatRoute
+  '/admin/': typeof AdminIndexRoute
   '/media/': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -87,27 +131,48 @@ export interface FileRouteTypes {
     | '/admin'
     | '/media'
     | '/login'
+    | '/admin/categories'
+    | '/admin/media'
+    | '/admin/upload'
     | '/media/$id'
+    | '/uploads/$'
+    | '/admin/'
     | '/media/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/media/$id' | '/media' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/admin/categories'
+    | '/admin/media'
+    | '/admin/upload'
+    | '/media/$id'
+    | '/uploads/$'
+    | '/admin'
+    | '/media'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/media'
     | '/login'
+    | '/admin/categories'
+    | '/admin/media'
+    | '/admin/upload'
     | '/media/$id'
+    | '/uploads/$'
+    | '/admin/'
     | '/media/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRouteRoute: typeof AdminRouteRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   MediaRouteRoute: typeof MediaRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  UploadsSplatRoute: typeof UploadsSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -148,12 +213,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MediaIndexRouteImport
       parentRoute: typeof MediaRouteRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/uploads/$': {
+      id: '/uploads/$'
+      path: '/uploads/$'
+      fullPath: '/uploads/$'
+      preLoaderRoute: typeof UploadsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/media/$id': {
       id: '/media/$id'
       path: '/$id'
       fullPath: '/media/$id'
       preLoaderRoute: typeof MediaIdRouteImport
       parentRoute: typeof MediaRouteRoute
+    }
+    '/admin/upload': {
+      id: '/admin/upload'
+      path: '/upload'
+      fullPath: '/admin/upload'
+      preLoaderRoute: typeof AdminUploadRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/media': {
+      id: '/admin/media'
+      path: '/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/categories': {
+      id: '/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AdminCategoriesRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -164,6 +264,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminRouteRouteChildren {
+  AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminMediaRoute: typeof AdminMediaRoute
+  AdminUploadRoute: typeof AdminUploadRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminMediaRoute: AdminMediaRoute,
+  AdminUploadRoute: AdminUploadRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
 
 interface MediaRouteRouteChildren {
   MediaIdRoute: typeof MediaIdRoute
@@ -181,9 +299,10 @@ const MediaRouteRouteWithChildren = MediaRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRouteRoute: AdminRouteRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   MediaRouteRoute: MediaRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  UploadsSplatRoute: UploadsSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
