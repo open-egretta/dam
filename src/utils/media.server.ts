@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, unlink } from "node:fs/promises";
 import { join, extname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
@@ -30,6 +30,42 @@ export async function queryMedia(opts: {
   return db
     .prepare(`SELECT * FROM media ORDER BY createdAt DESC LIMIT ? OFFSET ?`)
     .all(limit, offset) as MediaRow[];
+}
+
+export async function updateMediaById(
+  id: string,
+  fields: { originalName?: string; category?: string },
+): Promise<void> {
+  const sets: string[] = [];
+  const values: unknown[] = [];
+
+  if (fields.originalName) {
+    sets.push("originalName = ?");
+    values.push(fields.originalName);
+  }
+  if (fields.category) {
+    sets.push("category = ?");
+    values.push(fields.category);
+  }
+  if (sets.length === 0) return;
+
+  values.push(id);
+  db.prepare(`UPDATE media SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+}
+
+export async function deleteMediaById(id: string): Promise<void> {
+  const row = db.prepare(`SELECT filename FROM media WHERE id = ?`).get(id) as
+    | { filename: string }
+    | undefined;
+  if (!row) throw new Error("Media not found");
+
+  db.prepare(`DELETE FROM media WHERE id = ?`).run(id);
+
+  try {
+    await unlink(join(UPLOAD_DIR, row.filename));
+  } catch {
+    // file already gone, ignore
+  }
 }
 
 export async function assertSession() {
