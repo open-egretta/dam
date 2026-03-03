@@ -21,6 +21,7 @@ import { Route as AdminUploadRouteImport } from './routes/admin/upload'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiMediaDownloadIdRouteImport } from './routes/api/media/download.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -82,6 +83,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaDownloadIdRoute = ApiMediaDownloadIdRouteImport.update({
+  id: '/api/media/download/$id',
+  path: '/api/media/download/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/media/': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/download/$id': typeof ApiMediaDownloadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/media': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/download/$id': typeof ApiMediaDownloadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/media/': typeof MediaIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/download/$id': typeof ApiMediaDownloadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/media/'
     | '/api/auth/$'
+    | '/api/media/download/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/media'
     | '/api/auth/$'
+    | '/api/media/download/$id'
   id:
     | '__root__'
     | '/'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/media/'
     | '/api/auth/$'
+    | '/api/media/download/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -174,6 +186,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   UploadsSplatRoute: typeof UploadsSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiMediaDownloadIdRoute: typeof ApiMediaDownloadIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -262,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media/download/$id': {
+      id: '/api/media/download/$id'
+      path: '/api/media/download/$id'
+      fullPath: '/api/media/download/$id'
+      preLoaderRoute: typeof ApiMediaDownloadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   UploadsSplatRoute: UploadsSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiMediaDownloadIdRoute: ApiMediaDownloadIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

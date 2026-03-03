@@ -2,8 +2,9 @@ import { listCategories } from "@/utils/categories.functions";
 import { listMedia } from "@/utils/media.functions";
 import type { MediaRow } from "@/utils/media";
 import { createFileRoute } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Download, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { filesize } from "filesize";
 
 export const Route = createFileRoute("/media/")({
   loader: async () => {
@@ -19,30 +20,15 @@ export const Route = createFileRoute("/media/")({
 
 function ImageCard({
   row,
-  isAdmin,
   onOpen,
-  onDeleted,
 }: {
   row: MediaRow;
-  isAdmin: boolean;
-  onOpen: () => void;
-  onDeleted: () => void;
+  onOpen: (row: MediaRow) => void;
 }) {
-  async function handleDelete(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (!confirm("確定要刪除此素材？")) return;
-    const res = await fetch("/api/media/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: row.id }),
-    });
-    if (res.ok) onDeleted();
-  }
-
   return (
     <div
       className="relative overflow-hidden rounded-lg cursor-pointer group bg-gray-200 aspect-square"
-      onClick={onOpen}
+      onClick={() => onOpen(row)}
     >
       <img
         src={`/uploads/${row.filename}`}
@@ -50,24 +36,106 @@ function ImageCard({
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
-
       <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
       <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <p className="text-white font-medium text-xs truncate">
           {row.originalName}
         </p>
       </div>
+    </div>
+  );
+}
 
-      {isAdmin && (
-        <button
-          onClick={handleDelete}
-          className="absolute top-1.5 right-1.5 p-1.5 bg-black/50 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all"
-          title="刪除"
-        >
-          <Trash2 size={12} />
-        </button>
-      )}
+function DetailModal({
+  row,
+  onClose,
+}: {
+  row: MediaRow;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-3xl w-full flex flex-col sm:flex-row overflow-hidden max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Image */}
+        <div className="bg-gray-100 sm:w-1/2 flex items-center justify-center min-h-48">
+          <img
+            src={`/uploads/${row.filename}`}
+            alt={row.originalName}
+            className="max-h-[60vh] w-full object-contain"
+          />
+        </div>
+
+        {/* Info */}
+        <div className="sm:w-1/2 p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-base font-semibold text-gray-900 break-all">
+                {row.originalName}
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <dl className="text-sm space-y-1.5">
+              <div className="flex gap-2">
+                <dt className="text-gray-400 w-16 shrink-0">分類</dt>
+                <dd className="text-gray-700">{row.category}</dd>
+              </div>
+              {row.width > 0 && row.height > 0 && (
+                <div className="flex gap-2">
+                  <dt className="text-gray-400 w-16 shrink-0">尺寸</dt>
+                  <dd className="text-gray-700">
+                    {row.width} × {row.height}
+                  </dd>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <dt className="text-gray-400 w-16 shrink-0">大小</dt>
+                <dd className="text-gray-700">
+                  {filesize(row.size, { standard: "jedec" })}
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-gray-400 w-16 shrink-0">格式</dt>
+                <dd className="text-gray-700">{row.mimeType}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-gray-400 w-16 shrink-0">上傳</dt>
+                <dd className="text-gray-700">
+                  {new Date(row.createdAt).toLocaleString("zh-TW")}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <a
+            href={`/api/media/download/${row.id}`}
+            download
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Download size={15} />
+            下載
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -76,6 +144,8 @@ function RouteComponent() {
   const loaderData = Route.useLoaderData();
   const { categories, media } = loaderData;
   const [activeCategory, setActiveCategory] = useState("All");
+  const [selected, setSelected] = useState<MediaRow | null>(null);
+
   const filtered =
     activeCategory === "All"
       ? media
@@ -111,6 +181,7 @@ function RouteComponent() {
           ))}
         </div>
       </div>
+
       {/* Media Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {filtered.length === 0 ? (
@@ -121,17 +192,15 @@ function RouteComponent() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {filtered.map((row) => (
-              <ImageCard
-                key={row.id}
-                row={row}
-                isAdmin={false}
-                onOpen={() => {}}
-                onDeleted={() => {}}
-              />
+              <ImageCard key={row.id} row={row} onOpen={setSelected} />
             ))}
           </div>
         )}
       </div>
+
+      {selected && (
+        <DetailModal row={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }
