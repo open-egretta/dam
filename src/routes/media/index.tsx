@@ -43,7 +43,6 @@ const listMedia = createServerFn({ method: "GET" })
 
 export const Route = createFileRoute("/media/")({
   loader: async () => {
-    console.log("Loader called at:", new Date());
     const [media, categories] = await Promise.all([
       listMedia({ data: { limit: 100, offset: 0 } }),
       listCategories(),
