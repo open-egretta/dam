@@ -14,6 +14,24 @@ const ALLOWED_MIME = new Set([
   "image/gif",
 ]);
 
+export async function queryMedia(opts: {
+  category?: string;
+  limit: number;
+  offset: number;
+}): Promise<MediaRow[]> {
+  const { category, limit, offset } = opts;
+  if (category && category !== "All") {
+    return db
+      .prepare(
+        `SELECT * FROM media WHERE category = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+      )
+      .all(category, limit, offset) as MediaRow[];
+  }
+  return db
+    .prepare(`SELECT * FROM media ORDER BY createdAt DESC LIMIT ? OFFSET ?`)
+    .all(limit, offset) as MediaRow[];
+}
+
 export async function assertSession() {
   const session = await getSession();
 

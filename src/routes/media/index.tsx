@@ -1,45 +1,9 @@
-import { db } from "@/lib/db";
 import { listCategories } from "@/utils/categories.functions";
+import { listMedia } from "@/utils/media.functions";
+import type { MediaRow } from "@/utils/media";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import * as z from "zod";
-
-interface MediaRow {
-  id: string;
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  width: number;
-  height: number;
-  category: string;
-  uploadedBy: string;
-  createdAt: string;
-}
-
-const listMediaSchema = z.object({
-  category: z.string().optional(),
-  limit: z.number().int().positive().default(50),
-  offset: z.number().int().min(0).default(0),
-});
-const listMedia = createServerFn({ method: "GET" })
-  .inputValidator(listMediaSchema)
-  .handler(async ({ data }) => {
-    const { category, limit, offset } = data;
-    console.log(`createServerFn`);
-    if (category && category !== "All") {
-      return db
-        .prepare(
-          `SELECT * FROM media WHERE category = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
-        )
-        .all(category, limit, offset) as MediaRow[];
-    }
-    return db
-      .prepare(`SELECT * FROM media ORDER BY createdAt DESC LIMIT ? OFFSET ?`)
-      .all(limit, offset) as MediaRow[];
-  });
 
 export const Route = createFileRoute("/media/")({
   loader: async () => {
