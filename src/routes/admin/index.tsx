@@ -16,8 +16,7 @@ function RouteComponent() {
   const stats = [
     {
       label: "素材總數",
-      // value: totalFiles,
-      value: 0,
+      value: categories.reduce((sum, c) => sum + c.mediaCount, 0),
       icon: Images,
       color: "text-cyan-500",
       bg: "bg-cyan-50",
