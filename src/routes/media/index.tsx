@@ -18,6 +18,11 @@ export const Route = createFileRoute("/media/")({
   component: RouteComponent,
 });
 
+function thumbUrl(filename: string) {
+  const uuid = filename.split(".")[0];
+  return `/uploads/thumbs/${uuid}_thumb.webp`;
+}
+
 function ImageCard({
   row,
   onOpen,
@@ -31,7 +36,7 @@ function ImageCard({
       onClick={() => onOpen(row)}
     >
       <img
-        src={`/uploads/${row.filename}`}
+        src={thumbUrl(row.filename)}
         alt={row.originalName}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"

@@ -1,11 +1,13 @@
 import { writeFile, mkdir, unlink } from "node:fs/promises";
 import { join, extname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
+import sharp from "sharp";
 import { db } from "@/lib/db";
 import type { MediaRow, UploadResult } from "./media";
 import { getSession } from "@/lib/auth.functions";
 
 const UPLOAD_DIR = resolve(process.cwd(), "uploads");
+const THUMB_DIR = resolve(process.cwd(), "uploads/thumbs");
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ALLOWED_MIME = new Set([
   "image/jpeg",
@@ -66,6 +68,13 @@ export async function deleteMediaById(id: string): Promise<void> {
   } catch {
     // file already gone, ignore
   }
+
+  try {
+    const uuid = row.filename.split(".")[0];
+    await unlink(join(THUMB_DIR, `${uuid}_thumb.webp`));
+  } catch {
+    // thumb may not exist, ignore
+  }
 }
 
 export async function assertSession() {
@@ -81,6 +90,7 @@ export async function saveMediaFiles(
   userId: string,
 ): Promise<UploadResult> {
   await mkdir(UPLOAD_DIR, { recursive: true });
+  await mkdir(THUMB_DIR, { recursive: true });
 
   const uploaded: UploadResult["uploaded"] = [];
   const errors: string[] = [];
@@ -102,6 +112,15 @@ export async function saveMediaFiles(
     const ext = extname(file.name) || mimeToExt(file.type);
     const filename = `${id}${ext}`;
     await writeFile(join(UPLOAD_DIR, filename), buffer);
+
+    try {
+      await sharp(buffer)
+        .resize({ width: 400, withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(join(THUMB_DIR, `${id}_thumb.webp`));
+    } catch {
+      // non-fatal: thumb generation failure doesn't block upload
+    }
 
     db.prepare(
       `INSERT INTO media (id, filename, originalName, mimeType, size, width, height, category, uploadedBy, createdAt)

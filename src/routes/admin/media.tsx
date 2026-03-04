@@ -21,6 +21,11 @@ export const Route = createFileRoute("/admin/media")({
   component: RouteComponent,
 });
 
+function thumbUrl(filename: string) {
+  const uuid = filename.split(".")[0];
+  return `/uploads/thumbs/${uuid}_thumb.webp`;
+}
+
 function MediaCard({
   row,
   categories,
@@ -88,7 +93,7 @@ function MediaCard({
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden group">
       <div className="relative aspect-square bg-gray-100">
         <img
-          src={`/uploads/${row.filename}`}
+          src={thumbUrl(row.filename)}
           alt={row.originalName}
           className="w-full h-full object-cover"
           loading="lazy"
