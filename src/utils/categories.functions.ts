@@ -29,6 +29,51 @@ export const listCategories = createServerFn({ method: "GET" }).handler(
   },
 );
 
+export const renameCategory = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({ id: z.string(), name: z.string().trim().min(1).max(50) }),
+  )
+  .handler(async ({ data }) => {
+    await ensureSession();
+    const current = db
+      .prepare(`SELECT name FROM category WHERE id = ?`)
+      .get(data.id) as { name: string } | undefined;
+    if (!current) throw new Error("分類不存在");
+
+    const conflict = db
+      .prepare(`SELECT id FROM category WHERE name = ? AND id != ?`)
+      .get(data.name, data.id);
+    if (conflict) throw new Error(`分類「${data.name}」已存在`);
+
+    db.transaction(() => {
+      db.prepare(`UPDATE category SET name = ? WHERE id = ?`).run(
+        data.name,
+        data.id,
+      );
+      db.prepare(`UPDATE media SET category = ? WHERE category = ?`).run(
+        data.name,
+        current.name,
+      );
+    })();
+  });
+
+export const deleteCategory = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await ensureSession();
+    const current = db
+      .prepare(`SELECT name FROM category WHERE id = ?`)
+      .get(data.id) as { name: string } | undefined;
+    if (!current) throw new Error("分類不存在");
+
+    db.transaction(() => {
+      db.prepare(`UPDATE media SET category = '' WHERE category = ?`).run(
+        current.name,
+      );
+      db.prepare(`DELETE FROM category WHERE id = ?`).run(data.id);
+    })();
+  });
+
 export const createCategory = createServerFn({ method: "POST" })
   .inputValidator(z.object({ name: z.string().trim().min(1).max(50) }))
   .handler(async ({ data }) => {

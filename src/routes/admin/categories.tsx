@@ -1,29 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import * as z from "zod";
-import { randomUUID } from "node:crypto";
-import { ensureSession } from "@/lib/auth.functions";
-import { db } from "@/lib/db";
-import { listCategories } from "@/utils/categories.functions";
-
-const createCategory = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ name: z.string().trim().min(1).max(50) }))
-  .handler(async ({ data }) => {
-    await ensureSession();
-    const existing = db
-      .prepare(`SELECT id FROM category WHERE name = ?`)
-      .get(data.name);
-    if (existing) throw new Error(`分類「${data.name}」已存在`);
-
-    const id = randomUUID();
-    db.prepare(
-      `INSERT INTO category (id, name, createdAt) VALUES (?, ?, ?)`,
-    ).run(id, data.name, new Date().toISOString());
-
-    return { id, name: data.name };
-  });
+import {
+  createCategory,
+  deleteCategory,
+  listCategories,
+  renameCategory,
+} from "@/utils/categories.functions";
 
 export const Route = createFileRoute("/admin/categories")({
   loader: () => listCategories(),
@@ -44,6 +27,12 @@ function RouteComponent() {
     router.invalidate();
   }
 
+  function startEdit(id: string, name: string) {
+    setEditingId(id);
+    setEditValue(name);
+    setError("");
+  }
+
   function cancelEdit() {
     setEditingId(null);
     setEditValue("");
@@ -54,7 +43,7 @@ function RouteComponent() {
     const trimmed = editValue.trim();
     if (!trimmed || !editingId) return;
     try {
-      // await renameCategory({ data: { id: editingId, name: trimmed } });
+      await renameCategory({ data: { id: editingId, name: trimmed } });
       setEditingId(null);
       refresh();
     } catch (e) {
@@ -73,6 +62,17 @@ function RouteComponent() {
       refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "新增失敗");
+    }
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`確定要刪除分類「${name}」？\n屬於此分類的素材將會取消分類，但不會被刪除。`))
+      return;
+    try {
+      await deleteCategory({ data: { id } });
+      refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "刪除失敗");
     }
   }
 
@@ -198,13 +198,13 @@ function RouteComponent() {
                 ) : (
                   <>
                     <button
-                      // onClick={() => startEdit(cat)}
+                      onClick={() => startEdit(cat.id, cat.name)}
                       className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <Pencil size={15} />
                     </button>
                     <button
-                      // onClick={() => handleDelete(cat.id, cat.mediaCount)}
+                      onClick={() => handleDelete(cat.id, cat.name)}
                       className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 size={15} />
