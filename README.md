@@ -2,6 +2,8 @@
 
 A self-hosted, open-source Digital Asset Management system for organizing, storing, and serving images. Built with TanStack Start and SQLite — zero infrastructure required.
 
+English | [繁體中文](README.zh-TW.md)
+
 ## Features
 
 - **Authentication** — First visitor registers as admin; subsequent visits require login
@@ -27,7 +29,7 @@ A self-hosted, open-source Digital Asset Management system for organizing, stori
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - npm
 
 ## Installation
