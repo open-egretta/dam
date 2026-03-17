@@ -2,8 +2,8 @@ import { listCategories } from "@/utils/categories.functions";
 import { listMedia } from "@/utils/media.functions";
 import type { MediaRow } from "@/utils/media";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Download, Link2, Check, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { filesize } from "filesize";
 
 export const Route = createFileRoute("/media/")({
@@ -48,6 +48,28 @@ function ImageCard({
         </p>
       </div>
     </div>
+  );
+}
+
+function CopyLinkButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const url = `${window.location.origin}/media/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [id]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+    >
+      {copied ? <Check size={15} className="text-green-500" /> : <Link2 size={15} />}
+      {copied ? "已複製" : "連結"}
+    </button>
   );
 }
 
@@ -131,14 +153,17 @@ function DetailModal({
             </dl>
           </div>
 
-          <a
-            href={`/api/media/download/${row.id}`}
-            download
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            <Download size={15} />
-            下載
-          </a>
+          <div className="flex gap-2">
+            <a
+              href={`/api/media/download/${row.id}`}
+              download
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <Download size={15} />
+              下載
+            </a>
+            <CopyLinkButton id={row.id} />
+          </div>
         </div>
       </div>
     </div>

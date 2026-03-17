@@ -34,6 +34,12 @@ export async function queryMedia(opts: {
     .all(limit, offset) as MediaRow[];
 }
 
+export async function getMediaById(id: string): Promise<MediaRow | undefined> {
+  return db.prepare(`SELECT * FROM media WHERE id = ?`).get(id) as
+    | MediaRow
+    | undefined;
+}
+
 export async function updateMediaById(
   id: string,
   fields: { originalName?: string; category?: string },

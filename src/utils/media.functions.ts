@@ -1,12 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
-import { assertSession, deleteMediaById, queryMedia, saveMediaFiles, updateMediaById } from "./media.server";
+import { assertSession, deleteMediaById, getMediaById, queryMedia, saveMediaFiles, updateMediaById } from "./media.server";
 
 const listMediaSchema = z.object({
   category: z.string().optional(),
   limit: z.number().int().positive().default(50),
   offset: z.number().int().min(0).default(0),
 });
+
+export const getMedia = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const row = await getMediaById(data.id);
+    if (!row) throw new Error("Media not found");
+    return row;
+  });
 
 export const listMedia = createServerFn({ method: "GET" })
   .inputValidator(listMediaSchema)
